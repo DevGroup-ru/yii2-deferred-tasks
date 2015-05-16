@@ -10,7 +10,7 @@ use yii\helpers\ArrayHelper;
 
 
 /**
- * MysqlTaggableBehaviorTest
+ * DeferredControllerTest
  */
 class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
 {
