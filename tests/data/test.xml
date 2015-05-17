@@ -5,6 +5,12 @@
     <deferred_group id="3" name="Parallelo Only Last" allow_parallel_run="1" run_last_command_only="1"></deferred_group>
     <deferred_group id="4" name="Plain Only Last" allow_parallel_run="0" run_last_command_only="1"></deferred_group>
 
-    <deferred_queue id="1" user_id="2" is_repeating_task="1" cron_expression="* * * * *" next_start="2000-01-20 00:00:20" cli_command="echo NO RUN" status="0"></deferred_queue>
-    <deferred_queue id="2" cli_command="ls -la" next_start="2018-01-09 20:00:00" is_repeating_task="0" status="1"></deferred_queue>
+    <deferred_queue id="1" deferred_group_id="0" user_id="2" is_repeating_task="1" cron_expression="* * * * *" next_start="2000-01-20 00:00:20" cli_command="echo NO RUN" status="0"></deferred_queue>
+    <deferred_queue id="2" deferred_group_id="0" cli_command="ls -la" next_start="2018-01-09 20:00:00" is_repeating_task="0" status="1"></deferred_queue>
+    <deferred_queue id="3" deferred_group_id="0" is_repeating_task="1" status="1" cron_expression="* * * * *" next_start="2000-01-20 00:00:00" cli_command="touch" arguments="/tmp/task3"></deferred_queue>
+    <deferred_queue id="4" deferred_group_id="1" is_repeating_task="1" status="1" cron_expression="* * * * *" next_start="2000-01-20 00:00:00" cli_command="touch" arguments="/tmp/task4"></deferred_queue>
+
+    <deferred_queue id="5" deferred_group_id="3" is_repeating_task="1" status="1" cron_expression="* * * * *" next_start="2000-01-20 00:00:00" cli_command="touch" arguments="/tmp/task4"></deferred_queue>
+    <deferred_queue id="6" deferred_group_id="3" is_repeating_task="1" status="1" cron_expression="* * * * *" next_start="2000-01-20 00:00:00" cli_command="touch" arguments="/tmp/task6"></deferred_queue>
+    <deferred_queue id="7" deferred_group_id="3" is_repeating_task="1" status="1" cron_expression="* * * * *" next_start="2000-01-20 00:00:00" cli_command="touch" arguments="/tmp/task7"></deferred_queue>
 </dataset>

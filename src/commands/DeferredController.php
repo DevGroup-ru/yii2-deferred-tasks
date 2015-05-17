@@ -21,12 +21,14 @@ use yii\helpers\Console;
  */
 class DeferredController extends Controller
 {
+    private $forceNoParallel = false;
     /**
      * Runs all deferred commands
      */
-    public function actionIndex()
+    public function actionIndex($currentTime = null, $forceNoParallel = 0)
     {
-        $currentTime = time();
+        $currentTime = $currentTime ? intval($currentTime) : time();
+        $this->forceNoParallel = intval($forceNoParallel) === 1;
 
         // acquire lock for all queue
         if ($this->getMutex()->acquire('DeferredQueueSelect') === false) {
@@ -84,12 +86,14 @@ class DeferredController extends Controller
         $this->getMutex()->release('DeferredQueueSelect');
 
         // ok, now we can process groups
-        if ($this->canRunInParallel()) {
+        if ($this->canRunInParallel() && $this->forceNoParallel === false) {
 
             $fork = new Fork;
 
             foreach ($grouppedQueue as $groupId => $items) {
-                $fork->call([$this, 'processGroup'], [$groupId, $items]);
+                $fork->call(function() use($groupId, $items){
+                    $this->processGroup($groupId, $items);
+                }, [$groupId, $items]);
             }
             $fork->wait();
 
@@ -160,6 +164,10 @@ class DeferredController extends Controller
 
                 $queue = [$latestQueue];
             }
+        }
+
+        if ($this->forceNoParallel === true) {
+            $parallel_run_allowed = false;
         }
 
         if ($parallel_run_allowed === true && $group_id > 0) {

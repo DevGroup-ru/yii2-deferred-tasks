@@ -116,12 +116,12 @@ class DeferredQueue extends \yii\db\ActiveRecord
      */
     public function complete()
     {
-        $this->last_run_date = time();
+        $this->last_run_date = date('Y-m-d H:i:s', time());
 
         if ($this->is_repeating_task && !empty($this->cron_expression)) {
             $this->status = DeferredQueue::STATUS_SCHEDULED;
             $cron = CronExpression::factory($this->cron_expression);
-            $this->next_start = date('Y-m-d H:i:s', $cron->getNextRunDate());
+            $this->next_start = date('Y-m-d H:i:s', $cron->getNextRunDate()->getTimestamp());
             return $this->save();
         } else {
             return $this->delete() !== false;

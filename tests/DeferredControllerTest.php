@@ -62,8 +62,12 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
                     'username' => 'root',
                     'password' => '',
                 ],
+                'cache' => [
+                    'class' => 'yii\caching\FileCache',
+                ],
             ],
         ], $config));
+        Yii::$app->cache->flush();
     }
 
     public function testGetNextTasks()
@@ -86,5 +90,29 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertTrue($disabledTaskExists === false);
         $this->assertTrue($futureTaskExists === false);
 
+    }
+
+    public function testRunProcesses()
+    {
+        $this->getConnection()->createDataSet(['deferred_group', 'deferred_queue']);
+        $files = [
+            'task3',
+            'task4',
+            'task5',
+            'task6',
+            'task7',
+        ];
+        foreach ($files as $f){
+            if (file_exists("/tmp/$f")) {
+                unlink("/tmp/$f");
+            }
+        }
+        $time = mktime(19,40,0,5,19,2015);
+        $this->_controller->actionIndex($time, 1);
+        $this->assertTrue(file_exists('/tmp/task3'));
+        $this->assertTrue(file_exists('/tmp/task4'));
+        $this->assertTrue(file_exists('/tmp/task5')===false);
+        $this->assertTrue(file_exists('/tmp/task6')===false);
+        $this->assertTrue(file_exists('/tmp/task7'));
     }
 }

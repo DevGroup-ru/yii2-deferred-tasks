@@ -11,7 +11,7 @@ class DeferredQueueCompleteEvent extends DeferredQueueEvent
     /** @var boolean True if ok */
     public $success;
     /** @var DeferredQueue */
-    public $queues;
+    public $queue;
 
     /** @var DeferredGroup|null */
     public $group;

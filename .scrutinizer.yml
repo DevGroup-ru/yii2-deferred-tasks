@@ -111,3 +111,9 @@ checks:
         optional_parameters_at_the_end: true
         non_commented_empty_catch_block: true
         function_body_start_on_new_line: true
+
+filter:
+    excluded_paths:
+        - tests/*
+        - fork-helper/*
+        - vendor/*
