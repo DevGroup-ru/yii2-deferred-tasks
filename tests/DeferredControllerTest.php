@@ -101,6 +101,8 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
             'task5',
             'task6',
             'task7',
+            'task8',
+            'task9',
         ];
         foreach ($files as $f){
             if (file_exists("/tmp/$f")) {
@@ -114,5 +116,7 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertTrue(file_exists('/tmp/task5')===false);
         $this->assertTrue(file_exists('/tmp/task6')===false);
         $this->assertTrue(file_exists('/tmp/task7'));
+        $this->assertTrue(file_exists('/tmp/task8'));
+        $this->assertTrue(file_exists('/tmp/task9'));
     }
 }

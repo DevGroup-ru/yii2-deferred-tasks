@@ -13,4 +13,6 @@
     <deferred_queue id="5" deferred_group_id="3" is_repeating_task="1" status="1" cron_expression="* * * * *" next_start="2000-01-20 00:00:00" cli_command="touch" arguments="/tmp/task4"></deferred_queue>
     <deferred_queue id="6" deferred_group_id="3" is_repeating_task="1" status="1" cron_expression="* * * * *" next_start="2000-01-20 00:00:00" cli_command="touch" arguments="/tmp/task6"></deferred_queue>
     <deferred_queue id="7" deferred_group_id="3" is_repeating_task="1" status="1" cron_expression="* * * * *" next_start="2000-01-20 00:00:00" cli_command="touch" arguments="/tmp/task7"></deferred_queue>
+    <deferred_queue id="8" deferred_group_id="2" is_repeating_task="0" status="1" cron_expression="* * * * *" next_start="2000-01-20 00:00:00" cli_command="touch" arguments="/tmp/task8"></deferred_queue>
+    <deferred_queue id="9" deferred_group_id="2" is_repeating_task="0" status="1" cron_expression="* * * * *" next_start="2000-01-20 00:00:00" cli_command="touch" arguments="/tmp/task9"></deferred_queue>
 </dataset>
