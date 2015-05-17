@@ -13,7 +13,7 @@ install:
 
 before_script:
   - mysql -e 'create database yii2_deferred_tasks;'
-  - mysql < tests/migrations/mysql.sql
+  - mysql yii2_deferred_tasks < tests/migrations/mysql.sql
 
 script:
   - vendor/bin/phpunit --coverage-clover=coverage.clover
