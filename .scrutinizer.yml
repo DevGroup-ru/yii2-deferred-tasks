@@ -2,7 +2,9 @@ build:
     dependencies:
         before:
             - composer global require "fxp/composer-asset-plugin:1.0.0"
-
+    environment:
+        php:
+            version: 5.5.12 
 tools:
     php_sim: true
     php_pdepend: true
