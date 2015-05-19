@@ -25,7 +25,7 @@ class m160514_135802_initial extends Migration
             'last_run_date' => Schema::TYPE_TIMESTAMP . ' NULL',
             'console_route' => Schema::TYPE_STRING . ' NULL',
             'cli_command' => Schema::TYPE_STRING . ' NULL',
-            'arguments' => Schema::TYPE_TEXT . ' NULL',
+            'command_arguments' => Schema::TYPE_TEXT . ' NULL',
             'notify_initiator' => Schema::TYPE_BOOLEAN . ' NOT NULL DEFAULT 1',
             'notify_roles' => Schema::TYPE_STRING . ' NULL',
             'email_notification' => Schema::TYPE_BOOLEAN . ' NOT NULL DEFAULT 1',

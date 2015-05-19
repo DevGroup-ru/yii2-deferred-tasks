@@ -3,3 +3,4 @@ composer.lock
 vendor
 coverage
 tests/runtime
+coverage.xml

@@ -55,6 +55,7 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
             'components' => [
                 'mutex' => [
                     'class' => 'yii\mutex\MysqlMutex',
+                    'autoRelease' => false,
                 ],
                 'db' => [
                     'class' => Connection::className(),
@@ -103,6 +104,8 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
             'task7',
             'task8',
             'task9',
+            'task10',
+            'task11',
         ];
         foreach ($files as $f){
             if (file_exists("/tmp/$f")) {
@@ -118,5 +121,8 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertTrue(file_exists('/tmp/task7'));
         $this->assertTrue(file_exists('/tmp/task8'));
         $this->assertTrue(file_exists('/tmp/task9'));
+        $this->assertTrue(file_exists('/tmp/task10'));
+        $this->assertTrue(file_exists('/tmp/task11'));
     }
+
 }

@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS `deferred_queue` (
   `last_run_date` timestamp NULL DEFAULT NULL,
   `console_route` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   `cli_command` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `arguments` text COLLATE utf8_unicode_ci,
+  `command_arguments` text COLLATE utf8_unicode_ci,
   `notify_initiator` tinyint(1) NOT NULL DEFAULT '1',
   `notify_roles` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   `email_notification` tinyint(1) NOT NULL DEFAULT '1'

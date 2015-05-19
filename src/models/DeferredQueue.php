@@ -20,7 +20,7 @@ use Yii;
  * @property string $last_run_date
  * @property string $console_route
  * @property string $cli_command
- * @property string $arguments
+ * @property string $command_arguments
  * @property integer $notify_initiator
  * @property string $notify_roles
  * @property integer $email_notification
@@ -52,7 +52,7 @@ class DeferredQueue extends \yii\db\ActiveRecord
             [['deferred_group_id', 'user_id', 'is_repeating_task', 'status', 'notify_initiator', 'email_notification'], 'integer'],
             [['initiated_date', 'next_start', 'last_run_date'], 'safe'],
             [['cron_expression', 'console_route', 'cli_command', 'notify_roles'], 'string', 'max' => 255],
-            [['arguments'], 'string'],
+            [['command_arguments'], 'string'],
         ];
     }
 
@@ -73,7 +73,7 @@ class DeferredQueue extends \yii\db\ActiveRecord
             'last_run_date' => Yii::t('app', 'Last run date'),
             'console_route' => Yii::t('app', 'Console route'),
             'cli_command' => Yii::t('app', 'Cli command'),
-            'arguments' => Yii::t('app', 'Command arguments'),
+            'command_arguments' => Yii::t('app', 'Command arguments'),
             'notify_initiator' => Yii::t('app', 'Notify initiator'),
             'notify_roles' => Yii::t('app', 'Notify roles'),
             'email_notification' => Yii::t('app', 'Email notification'),
@@ -109,6 +109,22 @@ class DeferredQueue extends \yii\db\ActiveRecord
     }
 
     /**
+     * Sets next_start field to the next future timstamp when we should run again repeating task.
+     * If task is non-repeating and cron_expression is empty - false returned
+     */
+    public function planNextRun()
+    {
+        if ($this->is_repeating_task && !empty($this->cron_expression)) {
+            $this->status = DeferredQueue::STATUS_SCHEDULED;
+            $cron = CronExpression::factory($this->cron_expression);
+            $this->next_start = date('Y-m-d H:i:s', $cron->getNextRunDate()->getTimestamp());
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * Schedules next launch or deletes queue item if it is not repeatable
      *
      * @return bool Result of completing
@@ -118,10 +134,7 @@ class DeferredQueue extends \yii\db\ActiveRecord
     {
         $this->last_run_date = date('Y-m-d H:i:s', time());
 
-        if ($this->is_repeating_task && !empty($this->cron_expression)) {
-            $this->status = DeferredQueue::STATUS_SCHEDULED;
-            $cron = CronExpression::factory($this->cron_expression);
-            $this->next_start = date('Y-m-d H:i:s', $cron->getNextRunDate()->getTimestamp());
+        if ($this->planNextRun() === true) {
             return $this->save();
         } else {
             return $this->delete() !== false;

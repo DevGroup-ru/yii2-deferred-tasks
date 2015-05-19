@@ -278,8 +278,8 @@ class DeferredController extends Controller
                 ->setPrefix('./yii')
                 ->add($item->console_route);
         }
-        if (empty($item->arguments) === false) {
-            $args = explode("\n", $item->arguments);
+        if (empty($item->command_arguments) === false) {
+            $args = explode("\n", $item->command_arguments);
             foreach ($args as $arg) {
                 $arg = trim($arg);
                 if (!empty($arg)) {
