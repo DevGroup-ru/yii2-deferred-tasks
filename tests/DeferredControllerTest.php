@@ -22,13 +22,7 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
      */
     public function getConnection()
     {
-        $this->_controller = Yii::createObject([
-            'class' => DeferredController::className(),
-        ],[null,null]);
-
-        $this->mockApplication();
-        Yii::$app->db->open();
-        return $this->createDefaultDBConnection(\Yii::$app->db->pdo);
+        return $this->createDefaultDBConnection(\Yii::$app->getDb()->pdo);
     }
 
     /**
@@ -38,7 +32,17 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
     {
         return $this->createFlatXMLDataSet(__DIR__ . '/data/test.xml');
     }
-
+    /**
+     * @inheritdoc
+     */
+    protected function setUp()
+    {
+        $this->mockApplication();
+        $this->_controller = Yii::createObject([
+            'class' => DeferredController::className(),
+        ], [null, null]);
+        parent::setUp();
+    }
 
     /**
      * Populates Yii::$app with a new application
@@ -69,12 +73,15 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
             ],
         ], $config));
         Yii::$app->cache->flush();
+        Yii::$app->getDb()->open();
+        Yii::$app->runAction('migrate/down', [99999, 'interactive'=>0, 'migrationPath' => __DIR__ . '/../src/migrations/']);
+        Yii::$app->runAction('migrate/up', ['interactive'=>0, 'migrationPath' => __DIR__ . '/../src/migrations/']);
     }
 
     public function testGetNextTasks()
     {
-        $this->getConnection()->createDataSet(['deferred_group', 'deferred_queue']);
-        $time = mktime(19,40,0,5,19,2015);
+
+        $time = mktime(19, 40, 0, 5, 19, 2015);
 
         $tasks = DeferredQueue::getNextTasks($time);
 
@@ -95,7 +102,8 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
 
     public function testRunProcesses()
     {
-        $this->getConnection()->createDataSet(['deferred_group', 'deferred_queue']);
+
+
         $files = [
             'task3',
             'task4',
@@ -107,12 +115,12 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
             'task10',
             'task11',
         ];
-        foreach ($files as $f){
+        foreach ($files as $f) {
             if (file_exists("/tmp/$f")) {
                 unlink("/tmp/$f");
             }
         }
-        $time = mktime(19,40,0,5,19,2015);
+        $time = mktime(19, 40, 0, 5, 19, 2015);
         $this->_controller->actionIndex($time, 1);
         $this->assertTrue(file_exists('/tmp/task3'));
         $this->assertTrue(file_exists('/tmp/task4'));

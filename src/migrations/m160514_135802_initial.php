@@ -5,7 +5,7 @@ use yii\db\Migration;
 
 class m160514_135802_initial extends Migration
 {
-    public function safeUp()
+    public function up()
     {
         $tableOptions = '';
         if ($this->db->driverName === 'mysql') {
@@ -13,7 +13,7 @@ class m160514_135802_initial extends Migration
             $tableOptions = 'CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE=InnoDB';
         }
 
-        $this->createTable('{{%deferred_queue}}',[
+        $this->createTable('{{%deferred_queue}}', [
             'id' => Schema::TYPE_PK,
             'deferred_group_id' => Schema::TYPE_INTEGER . ' NOT NULL DEFAULT 0',
             'user_id' => Schema::TYPE_INTEGER . ' NULL',
@@ -31,7 +31,7 @@ class m160514_135802_initial extends Migration
             'email_notification' => Schema::TYPE_BOOLEAN . ' NOT NULL DEFAULT 1',
         ], $tableOptions);
 
-        $this->createTable('{{%deferred_group}}',[
+        $this->createTable('{{%deferred_group}}', [
             'id' => Schema::TYPE_PK,
             'name' => Schema::TYPE_STRING . ' NULL',
             'allow_parallel_run' => Schema::TYPE_BOOLEAN . ' NOT NULL DEFAULT 0',
@@ -48,7 +48,7 @@ class m160514_135802_initial extends Migration
         ]);
     }
 
-    public function safeDown()
+    public function down()
     {
         $this->dropTable('{{%deferred_queue}}');
         $this->dropTable('{{%deferred_group}}');
