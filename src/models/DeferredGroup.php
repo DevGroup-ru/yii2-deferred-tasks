@@ -2,7 +2,6 @@
 
 namespace DevGroup\DeferredTasks\models;
 
-use devgroup\TagDependencyHelper\ActiveRecordHelper;
 use Yii;
 use yii\caching\TagDependency;
 
@@ -20,7 +19,8 @@ use yii\caching\TagDependency;
  */
 class DeferredGroup extends \yii\db\ActiveRecord
 {
-    public static $identity_map = [];
+    use \DevGroup\TagDependencyHelper\TagDependencyTrait;
+
 
     /**
      * @inheritdoc
@@ -28,8 +28,8 @@ class DeferredGroup extends \yii\db\ActiveRecord
     public function behaviors()
     {
         return [
-            [
-                'class' => ActiveRecordHelper::className(),
+            'CacheableActiveRecord' => [
+                'class' => \DevGroup\TagDependencyHelper\CacheableActiveRecord::className(),
             ],
         ];
     }
@@ -77,27 +77,13 @@ class DeferredGroup extends \yii\db\ActiveRecord
      */
     public static function findById($id)
     {
-        $id = intval($id);
-
-        if (isset(static::$identity_map[$id]) === false) {
-            $cacheKey = static::tableName() . ':' . $id;
-
-            static::$identity_map[$id] = Yii::$app->cache->get($cacheKey);
-            if (is_object(static::$identity_map[$id]) === false) {
-                static::$identity_map[$id] = static::findOne($id);
-                Yii::$app->cache->set(
-                    $cacheKey,
-                    static::$identity_map[$id],
-                    86400,
-                    new TagDependency([
-                        'tags' => [
-                            ActiveRecordHelper::getObjectTag(static::className(), $id)
-                        ]
-                    ])
-                );
-            }
-
-        }
-        return static::$identity_map[$id];
+        return self::loadModel(
+            $id,
+            false,
+            true,
+            86400,
+            false,
+            true
+        );
     }
 }
