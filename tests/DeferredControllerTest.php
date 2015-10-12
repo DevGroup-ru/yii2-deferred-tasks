@@ -3,6 +3,7 @@
 namespace DevGroup\DeferredTasks\Tests;
 
 use DevGroup\DeferredTasks\commands\DeferredController;
+use DevGroup\DeferredTasks\helpers\OnetimeTask;
 use DevGroup\DeferredTasks\models\DeferredQueue;
 use Yii;
 use yii\db\Connection;
@@ -56,6 +57,11 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
             'id' => 'testapp',
             'basePath' => __DIR__,
             'vendorPath' => '../../vendor',
+            'controllerMap' => [
+                'deferred' => [
+                    'class' => DeferredController::className(),
+                ],
+            ],
             'components' => [
                 'mutex' => [
                     'class' => 'yii\mutex\MysqlMutex',
@@ -124,8 +130,6 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
 
     public function testRunProcesses()
     {
-
-
         $files = [
             'task3',
             'task4',
@@ -155,4 +159,26 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
         $this->assertTrue(file_exists('/tmp/task11'));
     }
 
+    public function testRegister()
+    {
+        $files = [
+            'task91',
+        ];
+        foreach ($files as $f) {
+            if (file_exists("/tmp/$f")) {
+                unlink("/tmp/$f");
+            }
+        }
+        $task = new OnetimeTask();
+        $task->cliCommand('touch', ['/tmp/task91']);
+
+        $this->assertTrue($task->registerTask());
+        $time = time()+120;
+        echo "Running $time = " . date("Y-m-d H:i:s", $time) . "\n";
+
+        Yii::$app->runAction('deferred/index', [$time, 1]);
+
+        echo "Checking\n";
+        $this->assertTrue(file_exists('/tmp/task91'));
+    }
 }

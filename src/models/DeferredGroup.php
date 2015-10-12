@@ -48,8 +48,8 @@ class DeferredGroup extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['allow_parallel_run', 'run_last_command_only', 'notify_initiator', 'email_notification', 'group_notifications'], 'integer'],
-            [['name', 'notify_roles'], 'string', 'max' => 255]
+            [['name', 'notify_roles'], 'string', 'max' => 255],
+            [['allow_parallel_run','notify_initiator','email_notification','group_notifications','run_last_command_only'], 'filter', 'filter'=>'boolval']
         ];
     }
 

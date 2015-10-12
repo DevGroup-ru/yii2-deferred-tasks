@@ -13,7 +13,7 @@ use Yii;
  * @property integer $deferred_group_id
  * @property integer $user_id
  * @property string $initiated_date
- * @property integer $is_repeating_task
+ * @property boolean $is_repeating_task
  * @property string $cron_expression
  * @property string $next_start
  * @property integer $status
@@ -49,10 +49,11 @@ class DeferredQueue extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['deferred_group_id', 'user_id', 'is_repeating_task', 'status', 'notify_initiator', 'email_notification'], 'integer'],
+            [['deferred_group_id', 'user_id', 'status'], 'integer'],
             [['initiated_date', 'next_start', 'last_run_date'], 'safe'],
             [['cron_expression', 'console_route', 'cli_command', 'notify_roles'], 'string', 'max' => 255],
             [['command_arguments'], 'string'],
+            [['is_repeating_task','notify_initiator','email_notification'], 'filter', 'filter'=>'boolval']
         ];
     }
 

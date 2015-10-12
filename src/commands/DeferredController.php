@@ -52,7 +52,7 @@ class DeferredController extends Controller
         // group queue
         $grouppedQueue = [];
         $ids = [];
-        foreach ($queue as $index => $item) {
+        foreach ($queue as $item) {
             $ids[] = $item->id;
 
             $itemCanBeAdded = true;
@@ -87,11 +87,10 @@ class DeferredController extends Controller
 
         // ok, now we can process groups
         if ($this->canRunInParallel() && $this->forceNoParallel === false) {
-
             $fork = new Fork;
 
             foreach ($grouppedQueue as $groupId => $items) {
-                $fork->call(function() use($groupId, $items){
+                $fork->call(function () use ($groupId, $items) {
                     $this->processGroup($groupId, $items);
                 }, [$groupId, $items]);
             }
@@ -274,8 +273,14 @@ class DeferredController extends Controller
         if (empty($item->cli_command) === false) {
             $command->setPrefix($item->cli_command);
         } else {
+            if (stristr(PHP_OS, 'WIN')) {
+                $command
+                    ->setPrefix('yii.bat');
+            } else {
+                $command
+                    ->setPrefix('./yii');
+            }
             $command
-                ->setPrefix('./yii')
                 ->add($item->console_route);
         }
         if (empty($item->command_arguments) === false) {
