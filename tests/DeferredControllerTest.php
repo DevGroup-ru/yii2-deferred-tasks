@@ -74,8 +74,30 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
         ], $config));
         Yii::$app->cache->flush();
         Yii::$app->getDb()->open();
-        Yii::$app->runAction('migrate/down', [99999, 'interactive'=>0, 'migrationPath' => __DIR__ . '/../src/migrations/']);
-        Yii::$app->runAction('migrate/up', ['interactive'=>0, 'migrationPath' => __DIR__ . '/../src/migrations/']);
+        Yii::$app->runAction('migrate/down', [99999, 'interactive' => 0, 'migrationPath' => __DIR__ . '/../src/migrations/']);
+        Yii::$app->runAction('migrate/up', ['interactive' => 0, 'migrationPath' => __DIR__ . '/../src/migrations/']);
+    }
+
+    /**
+     * Clean up after test.
+     * By default the application created with [[mockApplication]] will be destroyed.
+     */
+    protected function tearDown()
+    {
+        parent::tearDown();
+
+        $this->destroyApplication();
+    }
+
+    /**
+     * Destroys application in Yii::$app by setting it to null.
+     */
+    protected function destroyApplication()
+    {
+        if (\Yii::$app && \Yii::$app->has('session', true)) {
+            \Yii::$app->session->close();
+        }
+        \Yii::$app = null;
     }
 
     public function testGetNextTasks()
