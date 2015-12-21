@@ -25,6 +25,7 @@ class Bootstrap implements BootstrapInterface
             $app->controllerMap['deferred'] = [
                 'class' => DeferredController::className(),
             ];
+
         }
     }
 }

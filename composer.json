@@ -26,6 +26,16 @@
         }
     },
     "extra": {
-        "bootstrap": "DevGroup\\DeferredTasks\\Bootstrap"
+        "bootstrap": "DevGroup\\DeferredTasks\\Bootstrap",
+        "yii2-extension": {
+          "name": "Deferred tasks",
+          "name_ru": "Отложенные задачи",
+          "description_ru": "Запуск задач и действий в фоне для Yii2 Framework"
+        },
+        "migrationPath": [
+          "src/migrations"
+        ],
+        "configurables": "src/configurables.php",
+        "translationCategory": "deferred-tasks"
     }
 }
