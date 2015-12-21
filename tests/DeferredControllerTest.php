@@ -9,7 +9,6 @@ use Yii;
 use yii\db\Connection;
 use yii\helpers\ArrayHelper;
 
-
 /**
  * DeferredControllerTest
  */
