@@ -26,6 +26,6 @@
         }
     },
     "extra": {
-        "bootstrap": "DevGroup\\DeferredTasks\\DeferredTasksModule"
+        "bootstrap": "DevGroup\\DeferredTasks\\Bootstrap"
     }
 }
