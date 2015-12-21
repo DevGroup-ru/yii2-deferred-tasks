@@ -146,7 +146,7 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
             }
         }
         $time = mktime(19, 40, 0, 5, 19, 2015);
-        $this->_controller->actionIndex($time, 1);
+        $this->_controller->actionIndex('0', $time, 1);
         $this->assertTrue(file_exists('/tmp/task3'));
         $this->assertTrue(file_exists('/tmp/task4'));
         $this->assertTrue(file_exists('/tmp/task5')===false);
