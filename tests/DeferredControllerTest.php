@@ -175,7 +175,7 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
         $time = time()+120;
         echo "Running $time = " . date("Y-m-d H:i:s", $time) . "\n";
 
-        Yii::$app->runAction('deferred/index', [$time, 1]);
+        Yii::$app->runAction('deferred/index', [0, $time, 1]);
 
         echo "Checking\n";
         $this->assertTrue(file_exists('/tmp/task91'));
