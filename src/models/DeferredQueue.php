@@ -3,8 +3,10 @@
 namespace DevGroup\DeferredTasks\models;
 
 use \Cron\CronExpression;
+use DevGroup\TagDependencyHelper\TagDependencyTrait;
 use Symfony\Component\Process\Process;
 use Yii;
+use yii\db\ActiveRecord;
 
 /**
  * This is the model class for table "{{%deferred_queue}}".
@@ -24,16 +26,22 @@ use Yii;
  * @property integer $notify_initiator
  * @property string $notify_roles
  * @property integer $email_notification
+ * @property string $output_file
+ * @property integer $exit_code
+ * @property boolean $delete_after_run
  */
-class DeferredQueue extends \yii\db\ActiveRecord
+class DeferredQueue extends ActiveRecord
 {
     const STATUS_DISABLED = 0;
     const STATUS_SCHEDULED = 1;
     const STATUS_RUNNING = 2;
     const STATUS_FAILED = 3;
+    const STATUS_COMPLETE = 4;
 
-    /** @var null|Process  */
+    /** @var Process  */
     private $process = null;
+
+    use TagDependencyTrait;
 
     /**
      * @inheritdoc
@@ -50,10 +58,19 @@ class DeferredQueue extends \yii\db\ActiveRecord
     {
         return [
             [['deferred_group_id', 'user_id', 'status'], 'integer'],
-            [['initiated_date', 'next_start', 'last_run_date'], 'safe'],
+            [['initiated_date', 'next_start', 'last_run_date', 'exit_code'], 'safe'],
             [['cron_expression', 'console_route', 'cli_command', 'notify_roles'], 'string', 'max' => 255],
-            [['command_arguments'], 'string'],
-            [['is_repeating_task','notify_initiator','email_notification'], 'filter', 'filter'=>'boolval']
+            [['command_arguments', 'output_file'], 'string'],
+            [
+                [
+                    'is_repeating_task',
+                    'notify_initiator',
+                    'email_notification',
+                    'delete_after_run'
+                ],
+                'filter',
+                'filter'=>'boolval'
+            ]
         ];
     }
 
@@ -63,22 +80,42 @@ class DeferredQueue extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id' => Yii::t('app', 'ID'),
-            'deferred_group_id' => Yii::t('app', 'Deferred group ID'),
-            'user_id' => Yii::t('app', 'User ID'),
-            'initiated_date' => Yii::t('app', 'Initiated date'),
-            'is_repeating_task' => Yii::t('app', 'Is repeating task'),
-            'cron_expression' => Yii::t('app', 'Cron expression'),
-            'next_start' => Yii::t('app', 'Next start date'),
-            'status' => Yii::t('app', 'Status'),
-            'last_run_date' => Yii::t('app', 'Last run date'),
-            'console_route' => Yii::t('app', 'Console route'),
-            'cli_command' => Yii::t('app', 'Cli command'),
-            'command_arguments' => Yii::t('app', 'Command arguments'),
-            'notify_initiator' => Yii::t('app', 'Notify initiator'),
-            'notify_roles' => Yii::t('app', 'Notify roles'),
-            'email_notification' => Yii::t('app', 'Email notification'),
+            'id' => Yii::t('deferred-tasks', 'ID'),
+            'deferred_group_id' => Yii::t('deferred-tasks', 'Deferred group ID'),
+            'user_id' => Yii::t('deferred-tasks', 'User ID'),
+            'initiated_date' => Yii::t('deferred-tasks', 'Initiated date'),
+            'is_repeating_task' => Yii::t('deferred-tasks', 'Is repeating task'),
+            'cron_expression' => Yii::t('deferred-tasks', 'Cron expression'),
+            'next_start' => Yii::t('deferred-tasks', 'Next start date'),
+            'status' => Yii::t('deferred-tasks', 'Status'),
+            'last_run_date' => Yii::t('deferred-tasks', 'Last run date'),
+            'console_route' => Yii::t('deferred-tasks', 'Console route'),
+            'cli_command' => Yii::t('deferred-tasks', 'Cli command'),
+            'command_arguments' => Yii::t('deferred-tasks', 'Command arguments'),
+            'notify_initiator' => Yii::t('deferred-tasks', 'Notify initiator'),
+            'notify_roles' => Yii::t('deferred-tasks', 'Notify roles'),
+            'email_notification' => Yii::t('deferred-tasks', 'Email notification'),
+            'output_file' => Yii::t('deferred-tasks', 'Output file'),
+            'exit_code' => Yii::t('deferred-tasks', 'Exit code'),
+            'delete_after_run' => Yii::t('deferred-tasks', 'Delete after run'),
         ];
+    }
+
+    /**
+     * Performs some afterFind stuff like casting variables to correct type
+     */
+    public function afterFind ()
+    {
+        parent::afterFind();
+        $boolArguments = [
+            'is_repeating_task',
+            'notify_initiator',
+            'email_notification',
+            'delete_after_run',
+        ];
+        foreach ($boolArguments as $argument) {
+            $this->$argument = boolval($this->$argument);
+        }
     }
 
     /**
@@ -134,11 +171,16 @@ class DeferredQueue extends \yii\db\ActiveRecord
     public function complete()
     {
         $this->last_run_date = date('Y-m-d H:i:s', time());
+        $this->status = DeferredQueue::STATUS_COMPLETE;
 
         if ($this->planNextRun() === true) {
             return $this->save();
         } else {
-            return $this->delete() !== false;
+            if ($this->delete_after_run) {
+                return $this->delete() !== false;
+            } else {
+                return $this->save();
+            }
         }
     }
 
@@ -156,15 +198,23 @@ class DeferredQueue extends \yii\db\ActiveRecord
 
     /**
      * @param integer $currentTime
+     * @param array   $ids Filter by ids
      * @return DeferredQueue[]
      */
-    public static function getNextTasks($currentTime)
+    public static function getNextTasks($currentTime, $ids = null)
     {
         $currentTime = date("Y-m-d H:i:s", $currentTime);
 
-        return DeferredQueue::find()
-            ->where(['status' => DeferredQueue::STATUS_SCHEDULED])
-            ->andWhere('next_start <= :next_start', [':next_start' => $currentTime])
+        $query = DeferredQueue::find()
+            ->where(['status' => DeferredQueue::STATUS_SCHEDULED]);
+
+        if ($ids !== null) {
+            $query = $query->andWhere(['in', 'id', (array) $ids]);
+        } else {
+            $query = $query->andWhere('next_start <= :next_start', [':next_start' => $currentTime]);
+        }
+
+        return $query
             ->orderBy(['id'=>SORT_ASC])
             ->all();
     }

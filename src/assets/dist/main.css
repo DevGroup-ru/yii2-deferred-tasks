@@ -1,0 +1,8 @@
+.reporting-queue-item__output {
+    font-family: "Courier New", Courier, monospace;
+    overflow: scroll;
+    max-height: 500px;
+}
+.modal-dialog--reporting-queue-item {
+    width: 90%;
+}

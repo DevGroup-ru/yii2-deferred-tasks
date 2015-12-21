@@ -24,8 +24,14 @@ class DeferredController extends Controller
     private $forceNoParallel = false;
     /**
      * Runs all deferred commands
+     *
+     * @param string  $queueIds        Run exact queue ID, multiple tasks should be split by comma
+     * @param integer $currentTime     Current timestamp mock
+     * @param integer $forceNoParallel 1 to force running tasks one-by-one(no parallel run)
+     *
+     * @return integer Status code
      */
-    public function actionIndex($currentTime = null, $forceNoParallel = 0)
+    public function actionIndex($queueIds = '0', $currentTime = null, $forceNoParallel = 0)
     {
         $currentTime = $currentTime ? intval($currentTime) : time();
         $this->forceNoParallel = intval($forceNoParallel) === 1;
@@ -41,7 +47,14 @@ class DeferredController extends Controller
 
         // get scheduled queue
         /** @var DeferredQueue[] $queue */
-        $queue = DeferredQueue::getNextTasks($currentTime);
+        if (intval($queueIds) === 0) {
+            $queueIds = null;
+        } else {
+            $queueIds = explode(',', $queueIds);
+            array_walk($queueIds, 'intval');
+        }
+
+        $queue = DeferredQueue::getNextTasks($currentTime, $queueIds);
 
         if (count($queue) === 0) {
             $this->getMutex()->release('DeferredQueueSelect');
@@ -181,12 +194,27 @@ class DeferredController extends Controller
             $this->trigger('deferred-queue-item-started', new DeferredQueueEvent($item->deferred_group_id, $item->id));
 
             $this->stdout("Executing process -> " . $process->getCommandLine() . "\n", Console::FG_YELLOW);
+            if (isset(Yii::$app->params['deferred.env'])) {
+                $process->setEnv(Yii::$app->params['deferred.env']);
+            }
+            $process->setTimeout(1800);
+            $process->setIdleTimeout(1800);
             $item->setProcess($process);
 
             if ($parallel_run_allowed === true) {
-                $process->start();
+                try {
+                    $process->start();
+                } catch (\Exception $e) {
+                    $item->status = DeferredQueue::STATUS_FAILED;
+                    $item->exit_code = $item->getProcess()->getExitCode();
+                }
             } else {
-                $process->run();
+                try {
+                    $process->run();
+                } catch (\Exception $e) {
+                    $item->status = DeferredQueue::STATUS_FAILED;
+                    $item->exit_code = $item->getProcess()->getExitCode();
+                }
 
                 $this->immediateNotification($group, $item);
             }
@@ -196,7 +224,12 @@ class DeferredController extends Controller
 
         if ($parallel_run_allowed === true) {
             foreach ($queue as &$item) {
-                $item->getProcess()->wait();
+                try {
+                    $item->getProcess()->wait();
+                } catch (\Exception $e) {
+                    $item->status = DeferredQueue::STATUS_FAILED;
+                    $item->exit_code = $item->getProcess()->getExitCode();
+                }
                 $this->immediateNotification($group, $item);
             }
 
@@ -273,7 +306,7 @@ class DeferredController extends Controller
         if (empty($item->cli_command) === false) {
             $command->setPrefix($item->cli_command);
         } else {
-            if (stristr(PHP_OS, 'WIN')) {
+            if (strncasecmp(PHP_OS, 'WIN', 3) === 0) {
                 $command
                     ->setPrefix('yii.bat');
             } else {
@@ -294,6 +327,10 @@ class DeferredController extends Controller
         }
 
         $process = $command->getProcess();
+
+        if (empty($item->output_file) === false) {
+            $process->setCommandLine($process->getCommandLine() . ' > ' . $item->output_file . ' 2>&1');
+        }
 
         return $process;
     }

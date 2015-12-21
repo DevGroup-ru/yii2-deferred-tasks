@@ -3,7 +3,6 @@
 namespace DevGroup\DeferredTasks\models;
 
 use Yii;
-use yii\caching\TagDependency;
 
 /**
  * This is the model class for table "{{%deferred_group}}".
@@ -20,7 +19,6 @@ use yii\caching\TagDependency;
 class DeferredGroup extends \yii\db\ActiveRecord
 {
     use \DevGroup\TagDependencyHelper\TagDependencyTrait;
-
 
     /**
      * @inheritdoc
@@ -49,7 +47,17 @@ class DeferredGroup extends \yii\db\ActiveRecord
     {
         return [
             [['name', 'notify_roles'], 'string', 'max' => 255],
-            [['allow_parallel_run','notify_initiator','email_notification','group_notifications','run_last_command_only'], 'filter', 'filter'=>'boolval']
+            [
+                [
+                    'allow_parallel_run',
+                    'notify_initiator',
+                    'email_notification',
+                    'group_notifications',
+                    'run_last_command_only'
+                ],
+                'filter',
+                'filter'=>'boolval'
+            ]
         ];
     }
 
