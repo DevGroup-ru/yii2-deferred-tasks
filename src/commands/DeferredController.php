@@ -332,6 +332,8 @@ class DeferredController extends Controller
             $process->setCommandLine($process->getCommandLine() . ' > ' . $item->output_file . ' 2>&1');
         }
 
+        $process->setCommandLine($process->getCommandLine() . '; ./yii deferred/report '.$item->id.' $?');
+
         return $process;
     }
 
@@ -350,4 +352,18 @@ class DeferredController extends Controller
     {
         return Yii::getAlias('@app');
     }
+
+    public function actionReport($id, $code)
+    {
+        /** @var DeferredQueue $item */
+        $item = DeferredQueue::loadModel($id);
+        if ($item === null) {
+            $this->stderr("No such item $id");
+        }
+
+        $item->exit_code = $code;
+        $item->save();
+        // trigger event
+    }
+
 }
