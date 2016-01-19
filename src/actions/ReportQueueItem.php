@@ -2,6 +2,7 @@
 
 namespace DevGroup\DeferredTasks\actions;
 
+use DevGroup\DeferredTasks\helpers\DeferredHelper;
 use DevGroup\DeferredTasks\models\DeferredQueue;
 use DevGroup\DeferredTasks\structures\ReportingTaskResponse;
 use Yii;
@@ -26,7 +27,7 @@ class ReportQueueItem extends Action
             if (empty($item->output_file)) {
                 return new ReportingTaskResponse([
                     'error' => true,
-                    'errorMessage' => Yii::t('deferred.tasks', 'Field output_file is empty for queue item.'),
+                    'errorMessage' => Yii::t('deferred-tasks', 'Field output_file is empty for queue item.'),
                 ]);
             }
             if (file_exists($item->output_file) && is_readable($item->output_file)) {
@@ -39,7 +40,7 @@ class ReportQueueItem extends Action
                     fclose($fp);
                     return new ReportingTaskResponse([
                         'error' => true,
-                        'errorMessage' => Yii::t('deferred.tasks', 'Unable to fseek file.'),
+                        'errorMessage' => Yii::t('deferred-tasks', 'Unable to fseek file.'),
                         'lastFseekPosition' => $lastFseekPosition,
                         'newOutput' => '',
                         'status' => $item->status,
@@ -54,7 +55,11 @@ class ReportQueueItem extends Action
                 }
                 $lastFseekPosition += $bytesToRead;
                 fclose($fp);
-
+                //firing next task in chain if exists and if current is successfully finished
+                if ($item->status == DeferredQueue::STATUS_COMPLETE && $item->next_task_id != 0) {
+                    DeferredHelper::runImmediateTask($item->next_task_id);
+                    $item->status = DeferredQueue::STATUS_RUNNING;
+                }
                 return new ReportingTaskResponse([
                     'status' => $item->status,
                     'error' => false,
@@ -67,7 +72,7 @@ class ReportQueueItem extends Action
             } else {
                 return new ReportingTaskResponse([
                     'error' => true,
-                    'errorMessage' => Yii::t('deferred.tasks', 'Error accessing output file.'),
+                    'errorMessage' => Yii::t('deferred-tasks', 'Error accessing output file.'),
                     'lastFseekPosition' => $lastFseekPosition,
                     'newOutput' => '',
                     'status' => $item->status,

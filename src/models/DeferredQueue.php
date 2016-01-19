@@ -29,6 +29,7 @@ use yii\db\ActiveRecord;
  * @property string $output_file
  * @property integer $exit_code
  * @property boolean $delete_after_run
+ * @property integer $next_task_id
  */
 class DeferredQueue extends ActiveRecord
 {
@@ -57,7 +58,7 @@ class DeferredQueue extends ActiveRecord
     public function rules()
     {
         return [
-            [['deferred_group_id', 'user_id', 'status'], 'integer'],
+            [['deferred_group_id', 'user_id', 'status', 'next_task_id'], 'integer'],
             [['initiated_date', 'next_start', 'last_run_date', 'exit_code'], 'safe'],
             [['cron_expression', 'console_route', 'cli_command', 'notify_roles'], 'string', 'max' => 255],
             [['command_arguments', 'output_file'], 'string'],
@@ -98,6 +99,7 @@ class DeferredQueue extends ActiveRecord
             'output_file' => Yii::t('deferred-tasks', 'Output file'),
             'exit_code' => Yii::t('deferred-tasks', 'Exit code'),
             'delete_after_run' => Yii::t('deferred-tasks', 'Delete after run'),
+            'next_task_id' => Yii::t('deferred-tasks', 'Next task ID'),
         ];
     }
 

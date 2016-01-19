@@ -27,5 +27,9 @@ class Bootstrap implements BootstrapInterface
             ];
 
         }
+        $app->i18n->translations['deferred-tasks'] = [
+            'class' => 'yii\i18n\PhpMessageSource',
+            'basePath' => __DIR__ . DIRECTORY_SEPARATOR . 'messages',
+        ];
     }
 }
