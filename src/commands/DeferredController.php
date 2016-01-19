@@ -22,6 +22,11 @@ use yii\helpers\Console;
 class DeferredController extends Controller
 {
     private $forceNoParallel = false;
+
+    const EVENT_DEFERRED_QUEUE_ITEM_STARTED = 'deferred-queue-item-started';
+    const EVENT_DEFERRED_QUEUE_COMPLETE = 'deferred-queue-complete';
+    const EVENT_DEFERRED_QUEUE_GROUP_STARTED = 'deferred-queue-group-started';
+    const EVENT_DEFERRED_QUEUE_GROUP_COMPLETE = 'deferred-queue-group-complete';
     /**
      * Runs all deferred commands
      *
@@ -186,12 +191,12 @@ class DeferredController extends Controller
             $this->getMutex()->release('DeferredQueueGroup:' . $group_id);
         }
 
-        $this->trigger('deferred-queue-group-started', new DeferredGroupEvent($group_id));
+        $this->trigger(self::EVENT_DEFERRED_QUEUE_GROUP_STARTED, new DeferredGroupEvent($group_id));
 
         foreach ($queue as &$item) {
             $process = $this->runQueueItem($item);
 
-            $this->trigger('deferred-queue-item-started', new DeferredQueueEvent($item->deferred_group_id, $item->id));
+            $this->trigger(self::EVENT_DEFERRED_QUEUE_ITEM_STARTED, new DeferredQueueEvent($item->deferred_group_id, $item->id));
 
             $this->stdout("Executing process -> " . $process->getCommandLine() . "\n", Console::FG_YELLOW);
             if (isset(Yii::$app->params['deferred.env'])) {
@@ -262,7 +267,7 @@ class DeferredController extends Controller
         }
 
         $this->trigger(
-            'deferred-queue-group-complete',
+            self::EVENT_DEFERRED_QUEUE_GROUP_COMPLETE,
             new DeferredQueueGroupCompleteEvent($queue, $group)
         );
     }
@@ -287,7 +292,7 @@ class DeferredController extends Controller
         }
         if ($immediateNotification === true) {
             $this->trigger(
-                'deferred-queue-complete',
+                self::EVENT_DEFERRED_QUEUE_COMPLETE,
                 new DeferredQueueCompleteEvent($item)
             );
         }
@@ -329,7 +334,7 @@ class DeferredController extends Controller
         $process = $command->getProcess();
 
         if (empty($item->output_file) === false) {
-            $process->setCommandLine($process->getCommandLine() . ' > ' . $item->output_file . ' 2>&1');
+            $process->setCommandLine($process->getCommandLine() . ' >> ' . $item->output_file . ' 2>&1');
         }
 
         $process->setCommandLine($process->getCommandLine() . '; ./yii deferred/report '.$item->id.' $?');

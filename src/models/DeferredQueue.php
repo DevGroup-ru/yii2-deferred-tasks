@@ -38,6 +38,7 @@ class DeferredQueue extends ActiveRecord
     const STATUS_RUNNING = 2;
     const STATUS_FAILED = 3;
     const STATUS_COMPLETE = 4;
+    const STATUS_SUCCESS_AND_NEXT = 5;
 
     /** @var Process  */
     private $process = null;
@@ -99,7 +100,6 @@ class DeferredQueue extends ActiveRecord
             'output_file' => Yii::t('deferred-tasks', 'Output file'),
             'exit_code' => Yii::t('deferred-tasks', 'Exit code'),
             'delete_after_run' => Yii::t('deferred-tasks', 'Delete after run'),
-            'next_task_id' => Yii::t('deferred-tasks', 'Next task ID'),
         ];
     }
 
@@ -173,7 +173,11 @@ class DeferredQueue extends ActiveRecord
     public function complete()
     {
         $this->last_run_date = date('Y-m-d H:i:s', time());
-        $this->status = DeferredQueue::STATUS_COMPLETE;
+        if (0 != $this->next_task_id) {
+            $this->status = DeferredQueue::STATUS_SUCCESS_AND_NEXT;
+        } else {
+            $this->status = DeferredQueue::STATUS_COMPLETE;
+        }
 
         if ($this->planNextRun() === true) {
             return $this->save();

@@ -2,7 +2,6 @@
 
 namespace DevGroup\DeferredTasks\actions;
 
-use DevGroup\DeferredTasks\helpers\DeferredHelper;
 use DevGroup\DeferredTasks\models\DeferredQueue;
 use DevGroup\DeferredTasks\structures\ReportingTaskResponse;
 use Yii;
@@ -44,6 +43,7 @@ class ReportQueueItem extends Action
                         'lastFseekPosition' => $lastFseekPosition,
                         'newOutput' => '',
                         'status' => $item->status,
+                        'nextQueue' => $item->next_task_id,
                     ]);
                 }
 
@@ -55,13 +55,9 @@ class ReportQueueItem extends Action
                 }
                 $lastFseekPosition += $bytesToRead;
                 fclose($fp);
-                //firing next task in chain if exists and if current is successfully finished
-                if ($item->status == DeferredQueue::STATUS_COMPLETE && $item->next_task_id != 0) {
-                    DeferredHelper::runImmediateTask($item->next_task_id);
-                    $item->status = DeferredQueue::STATUS_RUNNING;
-                }
                 return new ReportingTaskResponse([
                     'status' => $item->status,
+                    'nextQueue' => $item->next_task_id,
                     'error' => false,
                     'newOutput' => $data,
                     'lastFseekPosition' => $lastFseekPosition,
@@ -76,6 +72,7 @@ class ReportQueueItem extends Action
                     'lastFseekPosition' => $lastFseekPosition,
                     'newOutput' => '',
                     'status' => $item->status,
+                    'nextQueue' => $item->next_task_id,
                 ]);
             }
         }

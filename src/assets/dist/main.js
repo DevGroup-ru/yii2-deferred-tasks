@@ -1,10 +1,10 @@
 'use strict';
 
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var ReportingQueueItem = (function () {
+var ReportingQueueItem = function () {
   function ReportingQueueItem() {
     _classCallCheck(this, ReportingQueueItem);
 
@@ -124,12 +124,16 @@ var ReportingQueueItem = (function () {
             case 4:
               statusText = 'complete';
               break;
+            case 5:
+              queueItemId = data.nextQueue;
+              statusText = 'running next';
+              break;
             default:
               statusText = 'unknown';
           }
           statusElement.text(statusText);
 
-          if (data.status <= 2) {
+          if ([0, 1, 2, 5].indexOf(data.status) !== -1) {
             outputElement.parent().find('.reporting-queue-item__message').text('Processing');
             window.reportingQueueItem.timeouts[queueItemId] = setTimeout(function refresh() {
               ReportingQueueItem.requestAndUpdate(queueItemId, endpoint, outputRequestInterval, outputElement, statusElement, data.lastFseekPosition);
@@ -156,7 +160,7 @@ var ReportingQueueItem = (function () {
   }]);
 
   return ReportingQueueItem;
-})();
+}();
 
 window.reportingQueueItem = new ReportingQueueItem();
 //# sourceMappingURL=main.js.map
