@@ -45,7 +45,8 @@ CREATE TABLE IF NOT EXISTS `deferred_queue` (
   `command_arguments` text COLLATE utf8_unicode_ci,
   `notify_initiator` tinyint(1) NOT NULL DEFAULT '1',
   `notify_roles` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `email_notification` tinyint(1) NOT NULL DEFAULT '1'
+  `email_notification` tinyint(1) NOT NULL DEFAULT '1',
+  `next_task_id` int(11) NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 --

@@ -10,7 +10,7 @@ class m160118_132418_reporting_chain_init extends Migration
         $this->addColumn(
             DeferredQueue::tableName(),
             'next_task_id',
-            $this->integer(11)->notNull()->defaultValue(0)
+            $this->integer()->notNull()->defaultValue(0)
         );
     }
 

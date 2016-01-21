@@ -44,6 +44,7 @@ class ReportingChain extends OnetimeTask
     /**
      * You should not use this method in chains.
      * Use ReportingChain::registerChain() instead.
+     *
      * @return bool
      */
     public function registerTask()
@@ -62,6 +63,7 @@ class ReportingChain extends OnetimeTask
 
     /**
      * Adds new chained task into chain
+     *
      * @param ReportingTask $model
      */
     public function addTask(ReportingTask $model)
@@ -71,6 +73,7 @@ class ReportingChain extends OnetimeTask
 
     /**
      * Registers newly created chain
+     *
      * @return int|null first chained ReportingTask id
      */
     public function registerChain()
