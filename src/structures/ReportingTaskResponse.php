@@ -12,4 +12,5 @@ class ReportingTaskResponse extends Object
     public $lastFseekPosition = 0;
     public $newOutput = '';
     public $taskStatusCode = null;
+    public $nextQueue = 0;
 }

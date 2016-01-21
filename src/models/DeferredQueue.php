@@ -29,6 +29,7 @@ use yii\db\ActiveRecord;
  * @property string $output_file
  * @property integer $exit_code
  * @property boolean $delete_after_run
+ * @property integer $next_task_id
  */
 class DeferredQueue extends ActiveRecord
 {
@@ -37,6 +38,7 @@ class DeferredQueue extends ActiveRecord
     const STATUS_RUNNING = 2;
     const STATUS_FAILED = 3;
     const STATUS_COMPLETE = 4;
+    const STATUS_SUCCESS_AND_NEXT = 5;
 
     /** @var Process  */
     private $process = null;
@@ -57,7 +59,7 @@ class DeferredQueue extends ActiveRecord
     public function rules()
     {
         return [
-            [['deferred_group_id', 'user_id', 'status'], 'integer'],
+            [['deferred_group_id', 'user_id', 'status', 'next_task_id'], 'integer'],
             [['initiated_date', 'next_start', 'last_run_date', 'exit_code'], 'safe'],
             [['cron_expression', 'console_route', 'cli_command', 'notify_roles'], 'string', 'max' => 255],
             [['command_arguments', 'output_file'], 'string'],
@@ -171,7 +173,11 @@ class DeferredQueue extends ActiveRecord
     public function complete()
     {
         $this->last_run_date = date('Y-m-d H:i:s', time());
-        $this->status = DeferredQueue::STATUS_COMPLETE;
+        if (0 != $this->next_task_id) {
+            $this->status = DeferredQueue::STATUS_SUCCESS_AND_NEXT;
+        } else {
+            $this->status = DeferredQueue::STATUS_COMPLETE;
+        }
 
         if ($this->planNextRun() === true) {
             return $this->save();

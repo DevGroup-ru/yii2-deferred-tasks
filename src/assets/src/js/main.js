@@ -58,12 +58,16 @@ class ReportingQueueItem {
           case 4:
             statusText = 'complete';
             break;
+          case 5:
+            queueItemId = data.nextQueue;
+            statusText = 'running next';
+            break;
           default:
             statusText = 'unknown';
         }
         statusElement.text(statusText);
 
-        if (data.status <= 2) {
+        if ([0,1,2,5].indexOf(data.status) !== -1) {
           outputElement.parent().find('.reporting-queue-item__message').text('Processing');
           window.reportingQueueItem.timeouts[queueItemId] = setTimeout(
             function refresh() {

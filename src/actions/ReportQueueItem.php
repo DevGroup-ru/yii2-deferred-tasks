@@ -26,7 +26,7 @@ class ReportQueueItem extends Action
             if (empty($item->output_file)) {
                 return new ReportingTaskResponse([
                     'error' => true,
-                    'errorMessage' => Yii::t('deferred.tasks', 'Field output_file is empty for queue item.'),
+                    'errorMessage' => Yii::t('deferred-tasks', 'Field output_file is empty for queue item.'),
                 ]);
             }
             if (file_exists($item->output_file) && is_readable($item->output_file)) {
@@ -39,10 +39,11 @@ class ReportQueueItem extends Action
                     fclose($fp);
                     return new ReportingTaskResponse([
                         'error' => true,
-                        'errorMessage' => Yii::t('deferred.tasks', 'Unable to fseek file.'),
+                        'errorMessage' => Yii::t('deferred-tasks', 'Unable to fseek file.'),
                         'lastFseekPosition' => $lastFseekPosition,
                         'newOutput' => '',
                         'status' => $item->status,
+                        'nextQueue' => $item->next_task_id,
                     ]);
                 }
 
@@ -54,9 +55,9 @@ class ReportQueueItem extends Action
                 }
                 $lastFseekPosition += $bytesToRead;
                 fclose($fp);
-
                 return new ReportingTaskResponse([
                     'status' => $item->status,
+                    'nextQueue' => $item->next_task_id,
                     'error' => false,
                     'newOutput' => $data,
                     'lastFseekPosition' => $lastFseekPosition,
@@ -67,10 +68,11 @@ class ReportQueueItem extends Action
             } else {
                 return new ReportingTaskResponse([
                     'error' => true,
-                    'errorMessage' => Yii::t('deferred.tasks', 'Error accessing output file.'),
+                    'errorMessage' => Yii::t('deferred-tasks', 'Error accessing output file.'),
                     'lastFseekPosition' => $lastFseekPosition,
                     'newOutput' => '',
                     'status' => $item->status,
+                    'nextQueue' => $item->next_task_id,
                 ]);
             }
         }

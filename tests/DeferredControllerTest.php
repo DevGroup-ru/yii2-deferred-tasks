@@ -3,8 +3,16 @@
 namespace DevGroup\DeferredTasks\Tests;
 
 use DevGroup\DeferredTasks\commands\DeferredController;
+use DevGroup\DeferredTasks\events\DeferredQueueCompleteEvent;
+use DevGroup\DeferredTasks\handlers\QueueCompleteEventHandler;
+use DevGroup\DeferredTasks\helpers\DeferredHelper;
 use DevGroup\DeferredTasks\helpers\OnetimeTask;
+use DevGroup\DeferredTasks\helpers\ReportingChain;
+use DevGroup\DeferredTasks\helpers\ReportingTask;
+use DevGroup\DeferredTasks\models\DeferredGroup;
 use DevGroup\DeferredTasks\models\DeferredQueue;
+use DevGroup\ExtensionsManager\ExtensionsManager;
+use Symfony\Component\Process\Process;
 use Yii;
 use yii\db\Connection;
 use yii\helpers\ArrayHelper;
@@ -52,31 +60,8 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
      */
     protected function mockApplication($config = [], $appClass = '\yii\console\Application')
     {
-        new $appClass(ArrayHelper::merge([
-            'id' => 'testapp',
-            'basePath' => __DIR__,
-            'vendorPath' => '../../vendor',
-            'controllerMap' => [
-                'deferred' => [
-                    'class' => DeferredController::className(),
-                ],
-            ],
-            'components' => [
-                'mutex' => [
-                    'class' => 'yii\mutex\MysqlMutex',
-                    'autoRelease' => false,
-                ],
-                'db' => [
-                    'class' => Connection::className(),
-                    'dsn' => 'mysql:host=localhost;dbname=yii2_deferred_tasks',
-                    'username' => 'root',
-                    'password' => '',
-                ],
-                'cache' => [
-                    'class' => 'yii\caching\FileCache',
-                ],
-            ],
-        ], $config));
+        $appConfig = require('config/testapp.php');
+        new $appClass(ArrayHelper::merge($appConfig, $config));
         Yii::$app->cache->flush();
         Yii::$app->getDb()->open();
         Yii::$app->runAction('migrate/down', [99999, 'interactive' => 0, 'migrationPath' => __DIR__ . '/../src/migrations/']);
@@ -175,9 +160,81 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
         $time = time()+120;
         echo "Running $time = " . date("Y-m-d H:i:s", $time) . "\n";
 
+        $this->assertInstanceOf(DeferredQueue::className(), $task->model());
+
         Yii::$app->runAction('deferred/index', [0, $time, 1]);
 
         echo "Checking\n";
         $this->assertTrue(file_exists('/tmp/task91'));
+    }
+
+    public function testReportingChain()
+    {
+        $files = [
+            'task201',
+            'task202',
+        ];
+        $testChain = new ReportingChain();
+        $this->assertTrue(false === $testChain->registerTask());
+        foreach ($files as $f) {
+            if (file_exists("/tmp/$f")) {
+                unlink("/tmp/$f");
+            }
+            $testTask = new ReportingTask();
+            $testTask->cliCommand('touch', "/tmp/$f");
+            $testChain->addTask($testTask);
+        }
+        $firstTaskId = $testChain->registerChain();
+        $this->assertTrue($firstTaskId !== null);
+        $time = time()+120;
+        Yii::$app->runAction('deferred/index', [$firstTaskId, $time, 1]);
+        /** @var DeferredQueue $finishedTask */
+        $finishedTask = DeferredQueue::loadModel($firstTaskId);
+        $this->assertEquals(DeferredQueue::STATUS_SUCCESS_AND_NEXT, $finishedTask->status);
+        $this->assertTrue(file_exists('/tmp/task201'));
+    }
+
+    public function testDeferredHelper()
+    {
+        if (true === file_exists('/tmp/301')) {
+            unlink('/tmp/301');
+        }
+        $testTask = new ReportingTask();
+        $testTask->cliCommand('touch', ['/tmp/301']);
+        $testTask->registerTask();
+        echo "Running queue with DeferredHelper\n";
+        DeferredHelper::runImmediateTask($testTask->model()->id);
+        sleep(2);
+        $this->assertTrue(file_exists('/tmp/301'));
+    }
+
+    public function testQueueCompleteEventHandler()
+    {
+        $files = [
+            'task401',
+            'task402',
+        ];
+        $testChain = new ReportingChain();
+        foreach ($files as $f) {
+            if (file_exists("/tmp/$f")) {
+                unlink("/tmp/$f");
+            }
+            $testTask = new ReportingTask();
+            $testTask->cliCommand('touch', ["/tmp/$f"]);
+            $testChain->addTask($testTask);
+        }
+        $firstTaskId = $testChain->registerChain();
+        DeferredHelper::runImmediateTask($firstTaskId);
+        sleep(2);
+        $this->assertTrue(file_exists('/tmp/task401'));
+        /** @var DeferredQueue $queue */
+        $queue = DeferredQueue::findOne(['id' => $firstTaskId]);
+        $process = new Process('pwd > /dev/null');
+        $process->run();
+        $queue->setProcess($process);
+        $event = new DeferredQueueCompleteEvent($queue);
+        QueueCompleteEventHandler::handleEvent($event);
+        sleep(2);
+        $this->assertTrue(file_exists('/tmp/task402'));
     }
 }

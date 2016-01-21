@@ -3,9 +3,12 @@
 namespace DevGroup\DeferredTasks;
 
 use DevGroup\DeferredTasks\commands\DeferredController;
+use DevGroup\DeferredTasks\events\DeferredQueueEvent;
+use DevGroup\DeferredTasks\handlers\QueueCompleteEventHandler;
 use Yii;
 use yii\base\Application;
 use yii\base\BootstrapInterface;
+use yii\base\Event;
 
 class Bootstrap implements BootstrapInterface
 {
@@ -27,5 +30,15 @@ class Bootstrap implements BootstrapInterface
             ];
 
         }
+        $app->i18n->translations['deferred-tasks'] = [
+            'class' => 'yii\i18n\PhpMessageSource',
+            'basePath' => __DIR__ . DIRECTORY_SEPARATOR . 'messages',
+        ];
+
+        DeferredQueueEvent::on(
+            DeferredController::className(),
+            DeferredController::EVENT_DEFERRED_QUEUE_COMPLETE,
+            [QueueCompleteEventHandler::className(), 'handleEvent']
+        );
     }
 }
