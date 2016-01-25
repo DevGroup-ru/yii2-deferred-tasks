@@ -22,7 +22,7 @@ class ReportingQueueItem {
     });
   }
 
-  static requestAndUpdate(queueItemId, endpoint, outputRequestInterval, outputElement, statusElement, lastFseekPosition = 0, afterCallback) {
+  static requestAndUpdate(queueItemId, endpoint, outputRequestInterval, outputElement, statusElement, lastFseekPosition = 0, afterCallback = undefined) {
     const that = this;
     $.ajax({
       url: endpoint,
@@ -78,7 +78,7 @@ class ReportingQueueItem {
         } else {
           outputElement.parent().find('.reporting-queue-item__message').text('Complete');
           if (afterCallback && afterCallback.constructor && afterCallback.call && afterCallback.apply) {
-              afterCallback.call(that, outputElement, data.status);
+              afterCallback(outputElement, data.status);
           }
           if (that.timeouts && that.timeouts.hasOwnProperty(queueItemId)) {
               clearTimeout(that.timeouts[queueItemId]);
@@ -96,7 +96,7 @@ class ReportingQueueItem {
       'requestingStatusMessage': params.requestingStatusMessage || 'Requesting queue item information.',
       'outputRequestInterval': 1000,
       'endpoint': params.endpoint || '/deferred-report-queue-item',
-      'afterCallback' : params.afterCallback || null,
+      'afterCallback' : params.afterCallback || undefined,
     };
   }
 
