@@ -21,7 +21,7 @@ var ReportingQueueItem = function () {
       var statusElement = modal.find('.reporting-queue-item__status');
       messageElement.text(options.requestingStatusMessage);
       modal.modal('show');
-      ReportingQueueItem.requestAndUpdate(queueItemId, options.endpoint, options.outputRequestInterval, outputElement, statusElement, 0);
+      ReportingQueueItem.requestAndUpdate(queueItemId, options.endpoint, options.outputRequestInterval, outputElement, statusElement, 0, options.afterCallback);
       var that = this;
       modal.on('hide.bs.modal', function onHideRemoveTimeout() {
         if (that.timeouts.hasOwnProperty(queueItemId)) {
@@ -88,6 +88,7 @@ var ReportingQueueItem = function () {
     key: 'requestAndUpdate',
     value: function requestAndUpdate(queueItemId, endpoint, outputRequestInterval, outputElement, statusElement) {
       var lastFseekPosition = arguments.length <= 5 || arguments[5] === undefined ? 0 : arguments[5];
+      var afterCallback = arguments.length <= 6 || arguments[6] === undefined ? undefined : arguments[6];
 
       var that = this;
       $.ajax({
@@ -136,11 +137,16 @@ var ReportingQueueItem = function () {
           if ([0, 1, 2, 5].indexOf(data.status) !== -1) {
             outputElement.parent().find('.reporting-queue-item__message').text('Processing');
             window.reportingQueueItem.timeouts[queueItemId] = setTimeout(function refresh() {
-              ReportingQueueItem.requestAndUpdate(queueItemId, endpoint, outputRequestInterval, outputElement, statusElement, data.lastFseekPosition);
+              ReportingQueueItem.requestAndUpdate(queueItemId, endpoint, outputRequestInterval, outputElement, statusElement, data.lastFseekPosition, afterCallback);
             }, outputRequestInterval);
           } else {
             outputElement.parent().find('.reporting-queue-item__message').text('Complete');
-            delete this.timeouts[queueItemId];
+            if (afterCallback && afterCallback.constructor && afterCallback.call && afterCallback.apply) {
+              afterCallback(outputElement, data.status);
+            }
+            if (that.timeouts && that.timeouts.hasOwnProperty(queueItemId)) {
+              clearTimeout(that.timeouts[queueItemId]);
+            }
           }
         }
       });
@@ -154,7 +160,8 @@ var ReportingQueueItem = function () {
         'statusLabel': params.statusLabel || 'Status:',
         'requestingStatusMessage': params.requestingStatusMessage || 'Requesting queue item information.',
         'outputRequestInterval': 1000,
-        'endpoint': params.endpoint || '/deferred-report-queue-item'
+        'endpoint': params.endpoint || '/deferred-report-queue-item',
+        'afterCallback': params.afterCallback || undefined
       };
     }
   }]);
