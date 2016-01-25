@@ -13,7 +13,7 @@ class ReportingQueueItem {
     const statusElement = modal.find('.reporting-queue-item__status');
     messageElement.text(options.requestingStatusMessage);
     modal.modal('show');
-    ReportingQueueItem.requestAndUpdate(queueItemId, options.endpoint, options.outputRequestInterval, outputElement, statusElement, 0);
+    ReportingQueueItem.requestAndUpdate(queueItemId, options.endpoint, options.outputRequestInterval, outputElement, statusElement, 0, options.afterCallback);
     const that = this;
     modal.on('hide.bs.modal', function onHideRemoveTimeout() {
       if (that.timeouts.hasOwnProperty(queueItemId)) {
@@ -22,7 +22,7 @@ class ReportingQueueItem {
     });
   }
 
-  static requestAndUpdate(queueItemId, endpoint, outputRequestInterval, outputElement, statusElement, lastFseekPosition = 0) {
+  static requestAndUpdate(queueItemId, endpoint, outputRequestInterval, outputElement, statusElement, lastFseekPosition = 0, afterCallback) {
     const that = this;
     $.ajax({
       url: endpoint,
@@ -71,13 +71,18 @@ class ReportingQueueItem {
           outputElement.parent().find('.reporting-queue-item__message').text('Processing');
           window.reportingQueueItem.timeouts[queueItemId] = setTimeout(
             function refresh() {
-              ReportingQueueItem.requestAndUpdate(queueItemId, endpoint, outputRequestInterval, outputElement, statusElement, data.lastFseekPosition);
+              ReportingQueueItem.requestAndUpdate(queueItemId, endpoint, outputRequestInterval, outputElement, statusElement, data.lastFseekPosition, afterCallback);
             },
             outputRequestInterval
           );
         } else {
           outputElement.parent().find('.reporting-queue-item__message').text('Complete');
-          delete this.timeouts[queueItemId];
+          if (afterCallback && afterCallback.constructor && afterCallback.call && afterCallback.apply) {
+              afterCallback.call(that, outputElement, data.status);
+          }
+          if (that.timeouts && that.timeouts.hasOwnProperty(queueItemId)) {
+              clearTimeout(that.timeouts[queueItemId]);
+          }
         }
       },
     });
@@ -91,6 +96,7 @@ class ReportingQueueItem {
       'requestingStatusMessage': params.requestingStatusMessage || 'Requesting queue item information.',
       'outputRequestInterval': 1000,
       'endpoint': params.endpoint || '/deferred-report-queue-item',
+      'afterCallback' : params.afterCallback || null,
     };
   }
 
