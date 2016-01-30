@@ -21,12 +21,13 @@ class DeferredHelper
     {
         $command = new ProcessBuilder();
         $command->setWorkingDirectory(Yii::getAlias('@app'));
+        $command->setPrefix(PHP_BINDIR . '/php');
         if (strncasecmp(PHP_OS, 'WIN', 3) === 0) {
             $command
-                ->setPrefix('yii.bat');
+                ->add('yii.bat');
         } else {
             $command
-                ->setPrefix('./yii');
+                ->add('./yii');
         }
         $command
             ->add('deferred/index')
