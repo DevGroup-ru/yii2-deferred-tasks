@@ -17,8 +17,7 @@
         "mtdowling/cron-expression": "^1.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "~4.0",
-        "phpunit/dbunit": "~1.0"
+        "devgroup/dotplant-dev": "~1.0.0"
     },
     "autoload-dev": {
         "psr-4": {
