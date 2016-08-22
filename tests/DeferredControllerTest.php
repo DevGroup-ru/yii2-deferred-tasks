@@ -102,8 +102,8 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
                 $futureTaskExists = true;
             }
         }
-        $this->assertTrue($disabledTaskExists === false);
-        $this->assertTrue($futureTaskExists === false);
+        $this->assertFalse($disabledTaskExists);
+        $this->assertFalse($futureTaskExists);
 
     }
 
@@ -127,15 +127,15 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
         }
         $time = mktime(19, 40, 0, 5, 19, 2015);
         Yii::$app->runAction('deferred/index', ['0', $time, 1]);
-        $this->assertTrue(file_exists('/tmp/task3'));
-        $this->assertTrue(file_exists('/tmp/task4'));
-        $this->assertFalse(file_exists('/tmp/task5'));
-        $this->assertFalse(file_exists('/tmp/task6'));
-        $this->assertTrue(file_exists('/tmp/task7'));
-        $this->assertTrue(file_exists('/tmp/task8'));
-        $this->assertTrue(file_exists('/tmp/task9'));
-        $this->assertTrue(file_exists('/tmp/task10'));
-        $this->assertTrue(file_exists('/tmp/task11'));
+        $this->assertFileExists('/tmp/task3');
+        $this->assertFileExists('/tmp/task4');
+        $this->assertFileNotExists('/tmp/task5');
+        $this->assertFileNotExists('/tmp/task6');
+        $this->assertFileExists('/tmp/task7');
+        $this->assertFileExists('/tmp/task8');
+        $this->assertFileExists('/tmp/task9');
+        $this->assertFileExists('/tmp/task10');
+        $this->assertFileExists('/tmp/task11');
     }
 
     public function testRegister()
@@ -160,7 +160,7 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
         Yii::$app->runAction('deferred/index', [0, $time, 1]);
 
         echo "Checking\n";
-        $this->assertTrue(file_exists('/tmp/task91'));
+        $this->assertFileExists('/tmp/task91');
     }
 
     public function testReportingChain()
@@ -180,13 +180,13 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
             $testChain->addTask($testTask);
         }
         $firstTaskId = $testChain->registerChain();
-        $this->assertTrue($firstTaskId !== null);
+        $this->assertNotNull($firstTaskId);
         $time = time()+120;
         Yii::$app->runAction('deferred/index', [$firstTaskId, $time, 1]);
         /** @var DeferredQueue $finishedTask */
         $finishedTask = DeferredQueue::loadModel($firstTaskId);
         $this->assertEquals(DeferredQueue::STATUS_SUCCESS_AND_NEXT, $finishedTask->status);
-        $this->assertTrue(file_exists('/tmp/task201'));
+        $this->assertFileExists('/tmp/task201');
     }
 
     public function testDeferredHelper()
@@ -200,7 +200,7 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
         echo "Running queue with DeferredHelper\n";
         DeferredHelper::runImmediateTask($testTask->model()->id);
         sleep(2);
-        $this->assertTrue(file_exists('/tmp/301'));
+        $this->assertFileExists('/tmp/301');
     }
 
     public function testQueueCompleteEventHandler()
@@ -221,7 +221,7 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
         $firstTaskId = $testChain->registerChain();
         DeferredHelper::runImmediateTask($firstTaskId);
         sleep(2);
-        $this->assertTrue(file_exists('/tmp/task401'));
+        $this->assertFileExists('/tmp/task401');
         /** @var DeferredQueue $queue */
         $queue = DeferredQueue::findOne(['id' => $firstTaskId]);
         $process = new Process('pwd > /dev/null');
@@ -230,6 +230,6 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
         $event = new DeferredQueueCompleteEvent($queue);
         QueueCompleteEventHandler::handleEvent($event);
         sleep(2);
-        $this->assertTrue(file_exists('/tmp/task402'));
+        $this->assertFileExists('/tmp/task402');
     }
 }
