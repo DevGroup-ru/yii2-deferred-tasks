@@ -19,6 +19,8 @@ use yii\helpers\ArrayHelper;
 
 /**
  * DeferredControllerTest
+ * @todo Change PHPUnit to Codeception
+ * @todo change data/test.xml to php fixture and remove there hardcode /tmp/ dir to sys_get_temp_dir()
  */
 class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
 {
@@ -44,6 +46,29 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
     protected function setUp()
     {
         $this->mockApplication();
+        $allFiles = [
+            'task3',
+            'task4',
+            'task5',
+            'task6',
+            'task7',
+            'task8',
+            'task9',
+            'task10',
+            'task11',
+            'task91',
+            'task201',
+            'task202',
+            '301',
+            'task401',
+            'task402',
+        ];
+        foreach ($allFiles as $f) {
+            $filename = sys_get_temp_dir() . DIRECTORY_SEPARATOR . $f;
+            if (file_exists($filename)) {
+                unlink($filename);
+            }
+        }
         parent::setUp();
     }
 
@@ -109,47 +134,23 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
 
     public function testRunProcesses()
     {
-        $files = [
-            'task3',
-            'task4',
-            'task5',
-            'task6',
-            'task7',
-            'task8',
-            'task9',
-            'task10',
-            'task11',
-        ];
-        foreach ($files as $f) {
-            if (file_exists("/tmp/$f")) {
-                unlink("/tmp/$f");
-            }
-        }
         $time = mktime(19, 40, 0, 5, 19, 2015);
         Yii::$app->runAction('deferred/index', ['0', $time, 1]);
-        $this->assertFileExists('/tmp/task3');
-        $this->assertFileExists('/tmp/task4');
-        $this->assertFileNotExists('/tmp/task5');
-        $this->assertFileNotExists('/tmp/task6');
-        $this->assertFileExists('/tmp/task7');
-        $this->assertFileExists('/tmp/task8');
-        $this->assertFileExists('/tmp/task9');
-        $this->assertFileExists('/tmp/task10');
-        $this->assertFileExists('/tmp/task11');
+        $this->assertFileExists(sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'task3');
+        $this->assertFileExists(sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'task4');
+        $this->assertFileNotExists(sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'task5');
+        $this->assertFileNotExists(sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'task6');
+        $this->assertFileExists(sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'task7');
+        $this->assertFileExists(sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'task8');
+        $this->assertFileExists(sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'task9');
+        $this->assertFileExists(sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'task10');
+        $this->assertFileExists(sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'task11');
     }
 
     public function testRegister()
     {
-        $files = [
-            'task91',
-        ];
-        foreach ($files as $f) {
-            if (file_exists("/tmp/$f")) {
-                unlink("/tmp/$f");
-            }
-        }
         $task = new OnetimeTask();
-        $task->cliCommand('touch', ['/tmp/task91']);
+        $task->cliCommand('touch', [sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'task91']);
 
         $this->assertTrue($task->registerTask());
         $time = time()+120;
@@ -160,7 +161,7 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
         Yii::$app->runAction('deferred/index', [0, $time, 1]);
 
         echo "Checking\n";
-        $this->assertFileExists('/tmp/task91');
+        $this->assertFileExists(sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'task91');
     }
 
     public function testReportingChain()
@@ -172,11 +173,8 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
         $testChain = new ReportingChain();
         $this->assertFalse($testChain->registerTask());
         foreach ($files as $f) {
-            if (file_exists("/tmp/$f")) {
-                unlink("/tmp/$f");
-            }
             $testTask = new ReportingTask();
-            $testTask->cliCommand('touch', "/tmp/$f");
+            $testTask->cliCommand('touch', sys_get_temp_dir() . DIRECTORY_SEPARATOR . $f);
             $testChain->addTask($testTask);
         }
         $firstTaskId = $testChain->registerChain();
@@ -186,21 +184,18 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
         /** @var DeferredQueue $finishedTask */
         $finishedTask = DeferredQueue::loadModel($firstTaskId);
         $this->assertEquals(DeferredQueue::STATUS_SUCCESS_AND_NEXT, $finishedTask->status);
-        $this->assertFileExists('/tmp/task201');
+        $this->assertFileExists(sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'task201');
     }
 
     public function testDeferredHelper()
     {
-        if (true === file_exists('/tmp/301')) {
-            unlink('/tmp/301');
-        }
         $testTask = new ReportingTask();
-        $testTask->cliCommand('touch', ['/tmp/301']);
+        $testTask->cliCommand('touch', [sys_get_temp_dir() . DIRECTORY_SEPARATOR . '301']);
         $testTask->registerTask();
         echo "Running queue with DeferredHelper\n";
         DeferredHelper::runImmediateTask($testTask->model()->id);
         sleep(2);
-        $this->assertFileExists('/tmp/301');
+        $this->assertFileExists(sys_get_temp_dir() . DIRECTORY_SEPARATOR . '301');
     }
 
     public function testQueueCompleteEventHandler()
@@ -211,17 +206,14 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
         ];
         $testChain = new ReportingChain();
         foreach ($files as $f) {
-            if (file_exists("/tmp/$f")) {
-                unlink("/tmp/$f");
-            }
             $testTask = new ReportingTask();
-            $testTask->cliCommand('touch', ["/tmp/$f"]);
+            $testTask->cliCommand('touch', [sys_get_temp_dir() . DIRECTORY_SEPARATOR . $f]);
             $testChain->addTask($testTask);
         }
         $firstTaskId = $testChain->registerChain();
         DeferredHelper::runImmediateTask($firstTaskId);
         sleep(2);
-        $this->assertFileExists('/tmp/task401');
+        $this->assertFileExists(sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'task401');
         /** @var DeferredQueue $queue */
         $queue = DeferredQueue::findOne(['id' => $firstTaskId]);
         $process = new Process('pwd > /dev/null');
@@ -230,6 +222,6 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
         $event = new DeferredQueueCompleteEvent($queue);
         QueueCompleteEventHandler::handleEvent($event);
         sleep(2);
-        $this->assertFileExists('/tmp/task402');
+        $this->assertFileExists(sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'task402');
     }
 }

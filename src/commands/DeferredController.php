@@ -60,7 +60,6 @@ class DeferredController extends Controller
         }
 
         $queue = DeferredQueue::getNextTasks($currentTime, $queueIds);
-
         if (count($queue) === 0) {
             $this->getMutex()->release('DeferredQueueSelect');
             $this->stdout("No tasks to run\n", Console::FG_GREEN);
@@ -337,7 +336,7 @@ class DeferredController extends Controller
             $process->setCommandLine($process->getCommandLine() . ' >> ' . $item->output_file . ' 2>&1');
         }
 
-        $process->setCommandLine($process->getCommandLine() . '; ./yii deferred/report '.$item->id.' $?');
+        $process->setCommandLine($process->getCommandLine() . ' || ./yii deferred/report '.$item->id.' $?');
 
         return $process;
     }
