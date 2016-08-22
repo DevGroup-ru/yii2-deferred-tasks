@@ -21,7 +21,7 @@ class DeferredHelper
     {
         $command = new ProcessBuilder();
         $command->setWorkingDirectory(Yii::getAlias('@app'));
-        $command->setPrefix(PHP_BINDIR . '/php');
+        $command->setPrefix(PHP_BINARY);
         if (strncasecmp(PHP_OS, 'WIN', 3) === 0) {
             $command
                 ->add('yii.bat');
