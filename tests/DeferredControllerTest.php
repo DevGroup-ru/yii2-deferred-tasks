@@ -22,8 +22,6 @@ use yii\helpers\ArrayHelper;
  */
 class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
 {
-    /** @var DeferredController */
-    private $_controller;
 
     /**
      * @inheritdoc
@@ -46,9 +44,6 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
     protected function setUp()
     {
         $this->mockApplication();
-        $this->_controller = Yii::createObject([
-            'class' => DeferredController::className(),
-        ], [null, null]);
         parent::setUp();
     }
 
@@ -131,11 +126,11 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
             }
         }
         $time = mktime(19, 40, 0, 5, 19, 2015);
-        $this->_controller->actionIndex('0', $time, 1);
+        Yii::$app->runAction('deferred/index', ['0', $time, 1]);
         $this->assertTrue(file_exists('/tmp/task3'));
         $this->assertTrue(file_exists('/tmp/task4'));
-        $this->assertTrue(file_exists('/tmp/task5')===false);
-        $this->assertTrue(file_exists('/tmp/task6')===false);
+        $this->assertFalse(file_exists('/tmp/task5'));
+        $this->assertFalse(file_exists('/tmp/task6'));
         $this->assertTrue(file_exists('/tmp/task7'));
         $this->assertTrue(file_exists('/tmp/task8'));
         $this->assertTrue(file_exists('/tmp/task9'));
@@ -175,7 +170,7 @@ class DeferredControllerTest extends \PHPUnit_Extensions_Database_TestCase
             'task202',
         ];
         $testChain = new ReportingChain();
-        $this->assertTrue(false === $testChain->registerTask());
+        $this->assertFalse($testChain->registerTask());
         foreach ($files as $f) {
             if (file_exists("/tmp/$f")) {
                 unlink("/tmp/$f");
