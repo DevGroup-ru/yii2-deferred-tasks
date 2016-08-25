@@ -56,7 +56,7 @@ class ReportingChain extends OnetimeTask
     {
         parent::__construct($attributes);
         $this->model = null;
-        $this->output_file = Yii::getAlias('@runtime') . '/deferred-task-'.uniqid();
+        $this->output_file = Yii::getAlias('@runtime') . DIRECTORY_SEPARATOR . 'deferred-task-' . uniqid();
         touch($this->output_file);
         chmod($this->output_file, 0777);
     }

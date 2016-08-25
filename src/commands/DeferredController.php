@@ -208,6 +208,10 @@ class DeferredController extends Controller
             if ($parallel_run_allowed === true) {
                 try {
                     $process->start();
+                    if ($process->isSuccessful() === false) {
+                        $item->status = DeferredQueue::STATUS_FAILED;
+                        $item->exit_code = $item->getProcess()->getExitCode();
+                    }
                 } catch (\Exception $e) {
                     $item->status = DeferredQueue::STATUS_FAILED;
                     $item->exit_code = $item->getProcess()->getExitCode();
@@ -215,6 +219,10 @@ class DeferredController extends Controller
             } else {
                 try {
                     $process->run();
+                    if ($process->isSuccessful() === false) {
+                        $item->status = DeferredQueue::STATUS_FAILED;
+                        $item->exit_code = $item->getProcess()->getExitCode();
+                    }
                 } catch (\Exception $e) {
                     $item->status = DeferredQueue::STATUS_FAILED;
                     $item->exit_code = $item->getProcess()->getExitCode();
@@ -229,7 +237,12 @@ class DeferredController extends Controller
         if ($parallel_run_allowed === true) {
             foreach ($queue as &$item) {
                 try {
-                    $item->getProcess()->wait();
+                    $process = $item->getProcess();
+                    $process->wait();
+                    if ($process->isSuccessful() === false) {
+                        $item->status = DeferredQueue::STATUS_FAILED;
+                        $item->exit_code = $item->getProcess()->getExitCode();
+                    }
                 } catch (\Exception $e) {
                     $item->status = DeferredQueue::STATUS_FAILED;
                     $item->exit_code = $item->getProcess()->getExitCode();
@@ -336,7 +349,7 @@ class DeferredController extends Controller
             $process->setCommandLine($process->getCommandLine() . ' >> ' . $item->output_file . ' 2>&1');
         }
 
-        $process->setCommandLine($process->getCommandLine() . ' || ./yii deferred/report '.$item->id.' $?');
+        $process->setCommandLine($process->getCommandLine() . ' || ./yii deferred/report ' . $item->id . ' $?');
 
         return $process;
     }
