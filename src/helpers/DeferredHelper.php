@@ -4,6 +4,7 @@ namespace DevGroup\DeferredTasks\helpers;
 
 use Symfony\Component\Process\ProcessBuilder;
 use Yii;
+use yii\helpers\ArrayHelper;
 
 /**
  * Class DeferredHelper is the main helper class for deferred tasks module.
@@ -34,11 +35,13 @@ class DeferredHelper
         $process = $command->getProcess();
         $process->setWorkingDirectory(Yii::getAlias('@app'));
         $process->disableOutput();
-        if (strncasecmp(PHP_OS, 'WIN', 3) !== 0) {
+        if (strncasecmp(PHP_OS, 'WIN', 3) === 0) {
+            $process->setCommandLine('start /b "deferred" ' . $process->getCommandLine());
+        } else {
             $process->setCommandLine($process->getCommandLine() . ' &');
         }
         if (isset(Yii::$app->params['deferred.env'])) {
-            $process->setEnv(Yii::$app->params['deferred.env']);
+            $process->setEnv(ArrayHelper::merge(Yii::$app->params['deferred.env'], $process->getEnv()));
         }
         $process->mustRun();
     }

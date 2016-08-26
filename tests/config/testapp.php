@@ -23,4 +23,9 @@ return [
             'class' => 'yii\caching\FileCache',
         ],
     ],
+    'params'=> [
+            'deferred.env' => [
+                'COMPOSER_HOME' => dirname(__DIR__),
+            ],
+    ]
 ];

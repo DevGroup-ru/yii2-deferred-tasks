@@ -12,6 +12,7 @@ use DevGroup\DeferredTasks\models\DeferredQueue;
 use Symfony\Component\Process\ProcessBuilder;
 use Yii;
 use yii\console\Controller;
+use yii\helpers\ArrayHelper;
 use yii\helpers\Console;
 
 /**
@@ -199,7 +200,7 @@ class DeferredController extends Controller
 
             $this->stdout("Executing process -> " . $process->getCommandLine() . "\n", Console::FG_YELLOW);
             if (isset(Yii::$app->params['deferred.env'])) {
-                $process->setEnv(Yii::$app->params['deferred.env']);
+                $process->setEnv(ArrayHelper::merge(Yii::$app->params['deferred.env'], $process->getEnv()));
             }
             $process->setTimeout(1800);
             $process->setIdleTimeout(1800);
