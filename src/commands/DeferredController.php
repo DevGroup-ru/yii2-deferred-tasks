@@ -229,6 +229,7 @@ class DeferredController extends Controller
                     $item->exit_code = $item->getProcess()->getExitCode();
                 }
 
+                $this->safeDbReconnection();
                 $this->immediateNotification($group, $item);
             }
 
@@ -248,6 +249,8 @@ class DeferredController extends Controller
                     $item->status = DeferredQueue::STATUS_FAILED;
                     $item->exit_code = $item->getProcess()->getExitCode();
                 }
+
+                $this->safeDbReconnection();
                 $this->immediateNotification($group, $item);
             }
 
@@ -369,6 +372,16 @@ class DeferredController extends Controller
     protected function getWorkingDirectory()
     {
         return Yii::getAlias('@app');
+    }
+
+    /**
+     * Reconnection to base if isn't used by persistent connection
+     */
+    protected function safeDbReconnection(){
+        if(empty(Yii::$app->db->pdo->getAttribute(constant("PDO::ATTR_PERSISTENT")))){
+            Yii::$app->db->close();
+            Yii::$app->db->open();
+        }
     }
 
     public function actionReport($id, $code)
