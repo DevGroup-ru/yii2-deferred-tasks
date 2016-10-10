@@ -10,3 +10,11 @@ This is an extension for yii2 framework for running deferred tasks in background
 Tasks can be either yii console commands or system cli commands.
  
 More details coming soon. 
+
+**WARNING**
+
+Use of mysql persistent connect isn't recommended. Use at your own risk.
+
+* [MySQL “Gone Away” Error with Persistent PHP Connection](http://stackoverflow.com/questions/26620625/mysql-gone-away-error-with-persistent-php-connection)
+* [Handling PDO Lost MySQL Connection Error](http://brady.lucidgene.com/articles/pdo-lost-mysql-connection-error)
+
