@@ -14,7 +14,7 @@
     "require": {
         "yiisoft/yii2": "~2.0",
         "symfony/process": "3.0.*@dev",
-        "devgroup/yii2-tag-dependency-helper": "~1.5.0",
+        "devgroup/yii2-tag-dependency-helper": "~1.5",
         "mtdowling/cron-expression": "^1.0"
     },
     "require-dev": {
