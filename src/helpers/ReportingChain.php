@@ -39,7 +39,7 @@ class ReportingChain extends OnetimeTask
      * Chained tasks array
      * @var ReportingTask[]
      */
-    private $chainedQueue = [];
+    public $chainedQueue = [];
 
     /**
      * You should not use this method in chains.
