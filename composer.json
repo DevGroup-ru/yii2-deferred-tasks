@@ -2,7 +2,6 @@
     "name": "devgroup/yii2-deferred-tasks",
     "description": "Allows running tasks and actions in background(triggered by cron) in yii2 framework.",
     "type": "yii2-extension",
-    "minimum-stability": "dev",
     "keywords": ["yii2","extension","dotplant","background"],
     "license": "BSD-3-Clause",
     "autoload": {
@@ -13,9 +12,9 @@
     },
     "require": {
         "yiisoft/yii2": "~2.0",
-        "symfony/process": "3.0.*@dev",
+        "symfony/process": "~3.2",
         "devgroup/yii2-tag-dependency-helper": "~1.5",
-        "mtdowling/cron-expression": "^1.0"
+        "mtdowling/cron-expression": "~1.2.0"
     },
     "require-dev": {
         "devgroup/dotplant-dev": "~1.0.0"
